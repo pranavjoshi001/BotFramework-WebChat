@@ -30,9 +30,9 @@ export default function createCoreMiddleware(): ActivityMiddleware[] {
           (type === 'message' &&
             // Do not show postback
             (activity.channelData?.postBack ||
-              // Do not show messageBack if displayText is undefined
+              // Do not show messageBack if displayText is undefined.
               (activity.channelData?.messageBack && !activity.channelData.messageBack.displayText) ||
-              // Do not show empty bubbles (no text and attachments)
+              // Do not show empty bubbles (no text and attachments).
               !(activity.text || activity.attachments?.length || messageThing?.abstract)))
         ) {
           return false;
