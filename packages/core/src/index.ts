@@ -23,6 +23,8 @@ import setSendTimeout from './actions/setSendTimeout';
 import setSendTypingIndicator from './actions/setSendTypingIndicator';
 import type { VoiceState } from './actions/setVoiceState';
 import setVoiceState from './actions/setVoiceState';
+import type { BargeInMode } from './actions/setBargeInMode';
+import setBargeInMode from './actions/setBargeInMode';
 import startDictate from './actions/startDictate';
 import startSpeakingActivity from './actions/startSpeakingActivity';
 import startVoiceRecording from './actions/startVoiceRecording';
@@ -145,6 +147,7 @@ export {
   setSendTimeout,
   setSendTypingIndicator,
   setVoiceState,
+  setBargeInMode,
   startDictate,
   startSpeakingActivity,
   startVoiceRecording,
@@ -157,6 +160,7 @@ export {
 };
 
 export type {
+  BargeInMode,
   DirectLineActivity,
   DirectLineAnimationCard,
   DirectLineAttachment,

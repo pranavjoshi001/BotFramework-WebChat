@@ -1,5 +1,6 @@
 import { VOICE_MUTE_RECORDING } from '../actions/muteVoiceRecording';
 import { VOICE_REGISTER_HANDLER } from '../actions/registerVoiceHandler';
+import { VOICE_SET_BARGE_IN_MODE } from '../actions/setBargeInMode';
 import { VOICE_SET_STATE } from '../actions/setVoiceState';
 import { VOICE_START_RECORDING } from '../actions/startVoiceRecording';
 import { VOICE_STOP_RECORDING } from '../actions/stopVoiceRecording';
@@ -8,6 +9,7 @@ import { VOICE_UNREGISTER_HANDLER } from '../actions/unregisterVoiceHandler';
 
 import type { VoiceMuteRecordingAction } from '../actions/muteVoiceRecording';
 import type { VoiceHandler, VoiceRegisterHandlerAction } from '../actions/registerVoiceHandler';
+import type { BargeInMode, VoiceSetBargeInModeAction } from '../actions/setBargeInMode';
 import type { VoiceSetStateAction, VoiceState } from '../actions/setVoiceState';
 import type { VoiceStartRecordingAction } from '../actions/startVoiceRecording';
 import type { VoiceStopRecordingAction } from '../actions/stopVoiceRecording';
@@ -17,6 +19,7 @@ import type { VoiceUnregisterHandlerAction } from '../actions/unregisterVoiceHan
 type VoiceActivityActions =
   | VoiceMuteRecordingAction
   | VoiceRegisterHandlerAction
+  | VoiceSetBargeInModeAction
   | VoiceSetStateAction
   | VoiceStartRecordingAction
   | VoiceStopRecordingAction
@@ -24,12 +27,14 @@ type VoiceActivityActions =
   | VoiceUnregisterHandlerAction;
 
 interface VoiceActivityState {
+  bargeInMode: BargeInMode | undefined;
   microphoneMuted: boolean;
   voiceState: VoiceState;
   voiceHandlers: Map<string, VoiceHandler>;
 }
 
 const DEFAULT_STATE: VoiceActivityState = {
+  bargeInMode: undefined,
   microphoneMuted: false,
   voiceState: 'idle',
   voiceHandlers: new Map()
@@ -94,9 +99,15 @@ export default function voiceActivity(
         microphoneMuted: false
       };
 
+    case VOICE_SET_BARGE_IN_MODE:
+      return {
+        ...state,
+        bargeInMode: action.payload.bargeInMode
+      };
+
     default:
       return state;
   }
 }
 
-export type { VoiceActivityState };
+export type { BargeInMode, VoiceActivityState };

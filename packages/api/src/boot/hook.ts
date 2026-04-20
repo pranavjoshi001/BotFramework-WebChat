@@ -78,5 +78,6 @@ export {
   useUsername,
   useVoiceRecordingMuted,
   useVoiceSelector,
-  useVoiceState
+  useVoiceState,
+  useBargeInMode
 } from '../hooks/index';

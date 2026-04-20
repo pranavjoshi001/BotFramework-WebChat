@@ -1,7 +1,9 @@
 const VOICE_REGISTER_HANDLER = 'WEB_CHAT/VOICE_REGISTER_HANDLER' as const;
 
+import type { BargeInMode } from './setBargeInMode';
+
 type VoiceHandler = {
-  queueAudio: (base64: string) => void;
+  queueAudio: (base64: string, bargeInMode?: BargeInMode) => void;
   stopAllAudio: () => void;
 };
 

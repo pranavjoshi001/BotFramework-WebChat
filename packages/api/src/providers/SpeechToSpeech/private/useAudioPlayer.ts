@@ -1,6 +1,9 @@
 import { useRef, useCallback, useMemo } from 'react';
 import useCapabilities from '../../Capabilities/useCapabilities';
 import useVoiceStateWritable from '../../../hooks/internal/useVoiceStateWritable';
+import useBargeInModeWritable from '../../../hooks/internal/useBargeInModeWritable';
+
+import type { BargeInMode } from 'botframework-webchat-core';
 
 const DEFAULT_SAMPLE_RATE = 24000;
 const INT16_SCALE = 32768;
@@ -11,11 +14,12 @@ export function useAudioPlayer() {
   const nextPlayTimeRef = useRef(0);
   const voiceConfiguration = useCapabilities(caps => caps.voiceConfiguration);
   const [, setVoiceState] = useVoiceStateWritable();
+  const [, setBargeInMode] = useBargeInModeWritable();
 
   const sampleRate = voiceConfiguration?.sampleRate ?? DEFAULT_SAMPLE_RATE;
 
   const queueAudio = useCallback(
-    async (base64: string) => {
+    async (base64: string, bargeInMode?: BargeInMode) => {
       if (!audioCtxRef.current) {
         audioCtxRef.current = new AudioContext({ sampleRate });
       }
@@ -46,17 +50,19 @@ export function useAudioPlayer() {
         src.onended = () => {
           src.disconnect();
           src.buffer = null;
-          // Only the last source's onended should trigger state change to 'listening'
+          // Only the last source's onended should trigger state change to 'listening' and clear bargeInMode
           if (lastSourceRef.current === src) {
             setVoiceState('listening');
+            setBargeInMode(undefined);
           }
         };
 
         lastSourceRef.current = src;
         const isFirstChunk = nextPlayTimeRef.current <= audioCtx.currentTime;
-        // Only dispatch bot_speaking on first chunk, we are resetting refs on stopAllAudio (bargein, mic off)
+        // Only dispatch bot_speaking and set bargeInMode on first chunk, we are resetting refs on stopAllAudio (bargein, mic off)
         if (isFirstChunk) {
           setVoiceState('bot_speaking');
+          setBargeInMode(bargeInMode);
         }
 
         nextPlayTimeRef.current = Math.max(nextPlayTimeRef.current, audioCtx.currentTime);
@@ -66,7 +72,7 @@ export function useAudioPlayer() {
         console.warn('botframework-webchat: Error during audio playback in useAudioPlayer:', error);
       }
     },
-    [setVoiceState, sampleRate]
+    [setVoiceState, setBargeInMode, sampleRate]
   );
 
   const stopAllAudio = useCallback(() => {
@@ -79,7 +85,9 @@ export function useAudioPlayer() {
       audioCtxRef.current.close();
       audioCtxRef.current = undefined;
     }
-  }, []);
+    // Clear bargeInMode when stopping playback
+    setBargeInMode(undefined);
+  }, [setBargeInMode]);
 
   return useMemo(
     () =>

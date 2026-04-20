@@ -99,6 +99,7 @@ export {
   useVoiceRecordingMuted,
   useVoiceSelector,
   useVoiceState,
+  useBargeInMode,
   useWebSpeechPonyfill,
   type SendBoxFocusOptions
 } from 'botframework-webchat-component/hook';

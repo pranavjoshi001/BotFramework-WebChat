@@ -76,13 +76,37 @@ function patchFromName(activity: DirectLineActivity) {
   });
 }
 
+// This is temp until MMRT starts sending voice activities as per activity spec.
+// This is needed so that WebChat can work with both MMRT and CCV2 as CCV2 follows activity spec and we have centralized logic in WebChat to handle voice activities.
+function transformMediaChunkActivity(activity: DirectLineActivity): DirectLineActivity {
+  const { value } = activity;
+
+  if (activity.type === 'event' && activity.name === 'media.chunk') {
+    // Ensure bargeInMode is in value (extract from voiceLiveEvent if needed for MMRT format)
+    const bargeInMode = 'none';
+
+    return {
+      ...activity,
+      value: {
+        ...value,
+        bargeInMode
+      }
+    };
+  }
+
+  return activity;
+}
+
 function* observeActivity({ directLine, userID }: { directLine: DirectLineJSBotConnection; userID?: string }) {
   yield observeEach(directLine.activity$, function* observeActivity(activity: DirectLineActivity) {
+    // activity = transformMediaChunkActivity(activity);
+
     // Handle voice activities separately - don't store them in Redux (except transcripts)
     if (isVoiceActivity(activity) && !isVoiceTranscriptActivity(activity)) {
-      const { recording, voiceHandlers } = yield select(state => ({
+      const { recording, voiceHandlers, bargeInMode } = yield select(state => ({
         recording: state.voice.voiceState !== 'idle',
-        voiceHandlers: state.voice.voiceHandlers
+        voiceHandlers: state.voice.voiceHandlers,
+        bargeInMode: state.voice.bargeInMode
       }));
 
       // Only process voice chunks if speech-to-speech is enabled.
@@ -93,8 +117,9 @@ function* observeActivity({ directLine, userID }: { directLine: DirectLineJSBotC
       switch (activity.name) {
         case 'media.chunk': {
           const audioContent = activity?.value?.content;
+          const bargeInMode = activity?.value?.bargeInMode;
           if (audioContent) {
-            voiceHandlers.forEach(handler => handler.queueAudio(audioContent));
+            voiceHandlers.forEach(handler => handler.queueAudio(audioContent, bargeInMode));
           }
           break;
         }
@@ -103,10 +128,20 @@ function* observeActivity({ directLine, userID }: { directLine: DirectLineJSBotC
           const state = activity?.value?.state;
 
           switch (state) {
-            case 'detected':
-              voiceHandlers.forEach(handler => handler.stopAllAudio());
-              yield put(setVoiceState('user_speaking'));
+            case 'detected': {
+              const origin = activity?.value?.origin ?? 'speech';
+
+              // undefined = all allowed, origin matches = allowed, otherwise = not allowed
+              const canBargeIn = !bargeInMode || bargeInMode === origin;
+              // eslint-disable-next-line no-console
+              console.log('botframework-webchat: canBargeIn:', canBargeIn); // For debugging - can remove later
+
+              if (canBargeIn) {
+                voiceHandlers.forEach(handler => handler.stopAllAudio());
+                yield put(setVoiceState('user_speaking'));
+              }
               break;
+            }
 
             case 'processing':
               yield put(setVoiceState('processing'));

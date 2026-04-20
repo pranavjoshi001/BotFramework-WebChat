@@ -76,6 +76,7 @@ import useUsername from './useUsername';
 import useVoiceRecordingMuted from './useVoiceRecordingMuted';
 import useVoiceSelector from './useVoiceSelector';
 import useVoiceState from './useVoiceState';
+import useBargeInMode from './useBargeInMode';
 
 export { useBuildRenderActivityCallback } from '@msinternal/botframework-webchat-api-middleware';
 export { useSuggestedActionsHooks } from '@msinternal/botframework-webchat-redux-store';
@@ -158,5 +159,6 @@ export {
   useUsername,
   useVoiceRecordingMuted,
   useVoiceSelector,
-  useVoiceState
+  useVoiceState,
+  useBargeInMode
 };
